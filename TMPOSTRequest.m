@@ -134,15 +134,15 @@
     {
 		return;
 	}
-	if(!self.postData) 
+	if(!_postData)
     {
-		self.postData = [NSMutableArray array];
+		_postData = [NSMutableArray array];
 	}
     
 	NSMutableDictionary *keyValuePair = [NSMutableDictionary dictionaryWithCapacity:2];
 	[keyValuePair setValue:key forKey:kPOSTKey];
 	[keyValuePair setValue:[value description] forKey:kPOSTValue];
-	[self.postData addObject:keyValuePair];
+	[_postData addObject:keyValuePair];
 }
 
 -(void)setPostValue:(id <NSObject>)value forKey:(NSString *)key
@@ -172,7 +172,7 @@
 {
 	if(!self.postData) 
     {
-        self.postData = [NSMutableArray array];
+        _postData = [NSMutableArray array];
 	}
 	if (!contentType) 
     {
@@ -317,7 +317,7 @@
 }
 
 -(NSData*) postData{
-	return _postData;
+	return (NSData*)_postData;
 }
 
 
@@ -371,9 +371,9 @@
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
     if(!self.rawResponseData)
-        self.rawResponseData = [NSMutableData dataWithData:data];
+        _rawResponseData = [NSMutableData dataWithData:data];
     else
-        [self.rawResponseData appendData:data];
+        [_rawResponseData appendData:data];
     
     if(self.downloadProgressBlock)
     {
