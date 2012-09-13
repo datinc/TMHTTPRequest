@@ -29,29 +29,16 @@
 #import "TMHTTPBlockPrototypes.h"
 
 @interface TMGETRequest : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-{
-    NSMutableURLRequest *request;
-    NSURLConnection     *urlconnection;
-}
 
-@property (copy) TMHTTPBasicBlock    startedBlock;
-@property (copy) TMHTTPSuccessBlock  completedBlock;
-@property (copy) TMHTTPFailureBlock  failedBlock;
-@property (copy) TMHTTPBasicBlock    cancelledBlock;
-@property (copy) TMHTTPProgressBlock downloadProgressBlock;
+@property (nonatomic, strong) NSURL *baseurl;
+@property (nonatomic, strong) NSMutableDictionary   *params;
+@property (nonatomic, assign) BOOL ignoresInvalidSSLCerts;
+@property (nonatomic, assign) BOOL useBackground;
 
-@property (strong) NSURL             *baseurl;
-
-@property (strong) NSMutableData     *rawResponseData;
-@property (strong) NSError           *error;
-@property (strong) NSHTTPURLResponse *response;
-
-@property (strong) NSMutableDictionary   *params;
-
-@property (assign) BOOL              ignoresInvalidSSLCerts;
-
-@property (assign) UIBackgroundTaskIdentifier    networkTask;
-@property (assign) BOOL                          useBackground;
+@property (nonatomic, readonly) NSData* rawResponseData;
+@property (nonatomic, strong, readonly) NSError *error;
+@property (nonatomic, strong, readonly) NSHTTPURLResponse *response;
+@property (nonatomic, assign, readonly) UIBackgroundTaskIdentifier networkTask;
 
 -(id)initWithURL:(NSURL*)url;
 -(void)startRequest;
@@ -60,5 +47,10 @@
 
 -(void)setValue:(id <NSObject>)value forKey:(NSString *)key;
 
+-(void) setStartedBlock:(TMHTTPBasicBlock)startedBlock;
+-(void) setCompletedBlock:(TMHTTPSuccessBlock)completedBlock;
+-(void) setFailedBlock:(TMHTTPFailureBlock)failedBlock;
+-(void) setCancelledBlock:(TMHTTPBasicBlock)cancelledBlock;
+-(void) setDownloadProgressBlock:(TMHTTPProgressBlock)downloadProgressBlock;
 
 @end

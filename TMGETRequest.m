@@ -27,30 +27,25 @@
 
 #import "TMGETRequest.h"
 
-@interface TMGETRequest (private)
+@interface TMGETRequest ()
 -(NSString*)encodeURL:(NSString *)string;
+@property (nonatomic, strong) NSError           *error;
+@property (nonatomic, strong) NSHTTPURLResponse *response;
+@property (nonatomic, assign) UIBackgroundTaskIdentifier    networkTask;
+
+@property (nonatomic, copy) TMHTTPBasicBlock    startedBlock;
+@property (nonatomic, copy) TMHTTPSuccessBlock  completedBlock;
+@property (nonatomic, copy) TMHTTPFailureBlock  failedBlock;
+@property (nonatomic, copy) TMHTTPBasicBlock    cancelledBlock;
+@property (nonatomic, copy) TMHTTPProgressBlock downloadProgressBlock;
+
 @end
 
-@implementation TMGETRequest
-
-@synthesize startedBlock            = _startedBlock;
-@synthesize completedBlock          = _completedBlock;
-@synthesize failedBlock             = _failedBlock;
-@synthesize cancelledBlock;
-
-@synthesize downloadProgressBlock   = _downloadProgressBlock;
-
-@synthesize baseurl;
-@synthesize rawResponseData         = _rawResponseData;
-@synthesize error                   = _error;
-@synthesize response                = _response;
-
-@synthesize ignoresInvalidSSLCerts  = _ignoresInvalidSSLCerts;
-
-@synthesize networkTask             = _networkTask;
-@synthesize useBackground           = _useBackground;
-
-@synthesize params;
+@implementation TMGETRequest{
+    NSMutableURLRequest *request;
+    NSURLConnection     *urlconnection;
+	NSMutableData		*_rawResponseData;
+}
 
 -(id)initWithURL:(NSURL*)url
 {
@@ -100,6 +95,15 @@
 	return @"";
 }
 
+-(NSString*) objectToString:(id) object{
+	if ([object isKindOfClass:[NSString class]]){
+		return object;
+	}else if ([object respondsToSelector:@selector(stringValue)]){
+		return [object stringValue];
+	}else{
+		return nil;
+	}
+}
 -(void)realStartRequest
 {
     if(self.useBackground)
@@ -111,22 +115,24 @@
     
     NSURL * realURL = self.baseurl;
     
-    if(self.params)
+    if(self.params.count > 0)
     {
-        NSMutableString * paramString = [NSMutableString stringWithString:@"?"];
-        for(NSString *key in params) 
-        {
-            //TODO: encode this shit eh?
-            id temp = [params objectForKey:key];
-            NSString * strParam = [NSString stringWithFormat:@"%@", temp];
-            
-            [paramString appendFormat:@"%@=%@&", key, [self encodeURL:strParam]];
-        }
-        NSString * urlstring = [[self.baseurl absoluteString] stringByAppendingString:paramString];
-        
-        if([urlstring hasSuffix:@"&"])
-            urlstring = [urlstring substringToIndex:urlstring.length-1];
-        realURL = [NSURL URLWithString:urlstring];
+		NSMutableArray* paramStrings = [NSMutableArray array];
+		
+		[self.params enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+            id temp = [self.params objectForKey:key];
+			NSString* strParam = [self objectToString:temp];
+			if ([strParam length] > 0){
+				[paramStrings addObject:[NSString stringWithFormat:@"%@=%@", key, [self encodeURL:strParam]]];
+			}
+		}];
+		if (paramStrings.count > 0){
+			NSString* paramString = [@"?" stringByAppendingString:[paramStrings componentsJoinedByString:@"&"]];
+			
+			NSString * urlstring = [[self.baseurl absoluteString] stringByAppendingString:paramString];
+			
+			realURL = [NSURL URLWithString:urlstring];
+		}
     }
     
     request = [NSMutableURLRequest requestWithURL:realURL];
@@ -191,7 +197,10 @@
     
     [self.params setValue:value forKey:key];
 }
-
+#pragma mark - Accesors
+-(NSData*) rawResponseData{
+	return _rawResponseData;
+}
 
 #pragma mark - NSURLConnectionDelegate methods
 
@@ -244,10 +253,10 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
-    if(!self.rawResponseData)
-        self.rawResponseData = [NSMutableData dataWithData:data];
+    if(!_rawResponseData)
+        _rawResponseData = [NSMutableData dataWithData:data];
     else
-        [self.rawResponseData appendData:data];
+        [_rawResponseData appendData:data];
     
     if(self.downloadProgressBlock)
     {

@@ -32,25 +32,29 @@
 #define kPOSTContentType    @"POSTCTP"
 #define kPOSTFilename       @"POSTFILE"
 
-@implementation TMPOSTRequest
+@interface TMPOSTRequest ()
 
-@synthesize startedBlock            = _startedBlock;
-@synthesize completedBlock          = _completedBlock;
-@synthesize failedBlock             = _failedBlock;
-@synthesize cancelledBlock;
+@property (nonatomic, strong) NSError *error;
+@property (nonatomic, strong) NSHTTPURLResponse *response;
+@property (nonatomic, assign) UIBackgroundTaskIdentifier    networkTask;
 
-@synthesize uploadProgressBlock     = _uploadProgressBlock;
-@synthesize downloadProgressBlock   = _downloadProgressBlock;
 
-@synthesize postData                = _postData;
-@synthesize rawResponseData         = _rawResponseData;
-@synthesize error                   = _error;
-@synthesize response                = _response;
+@property (nonatomic, copy) TMHTTPBasicBlock    startedBlock;
+@property (nonatomic, copy) TMHTTPSuccessBlock  completedBlock;
+@property (nonatomic, copy) TMHTTPFailureBlock  failedBlock;
+@property (nonatomic, copy) TMHTTPBasicBlock    cancelledBlock;
+ 
+@property (nonatomic, copy) TMHTTPProgressBlock uploadProgressBlock;
+@property (nonatomic, copy) TMHTTPProgressBlock downloadProgressBlock;
 
-@synthesize ignoresInvalidSSLCerts  = _ignoresInvalidSSLCerts;
+@end
 
-@synthesize networkTask             = _networkTask;
-@synthesize useBackground           = _useBackground;
+@implementation TMPOSTRequest{
+    NSMutableURLRequest *request;
+    NSURLConnection     *connection;
+	NSMutableArray    *_postData;
+	NSMutableData     *_rawResponseData;
+}
 
 -(id)initWithURL:(NSURL*)url
 {
@@ -115,7 +119,7 @@
             [data appendData:value];
         }
         
-        [data appendData:[[NSString stringWithString:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+        [data appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
 
     }
     
@@ -306,6 +310,16 @@
         self.networkTask = UIBackgroundTaskInvalid;
     }
 }
+
+#pragma mark - Accesors
+-(NSData*) rawResponseData{
+	return _rawResponseData;
+}
+
+-(NSData*) postData{
+	return _postData;
+}
+
 
 #pragma mark - NSURLConnectionDelegate methods
 

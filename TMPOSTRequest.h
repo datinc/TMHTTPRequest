@@ -29,29 +29,15 @@
 #import "TMHTTPBlockPrototypes.h"
 
 @interface TMPOSTRequest : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-{
-    NSMutableURLRequest *request;
-    NSURLConnection     *connection;
-}
 
-@property (copy) TMHTTPBasicBlock    startedBlock;
-@property (copy) TMHTTPSuccessBlock  completedBlock;
-@property (copy) TMHTTPFailureBlock  failedBlock;
-@property (copy) TMHTTPBasicBlock    cancelledBlock;
+@property (nonatomic, assign) BOOL ignoresInvalidSSLCerts;
+@property (nonatomic, assign) BOOL useBackground;
 
-@property (copy) TMHTTPProgressBlock uploadProgressBlock;
-@property (copy) TMHTTPProgressBlock downloadProgressBlock;
-
-
-@property (strong) NSMutableArray    *postData;
-@property (strong) NSMutableData     *rawResponseData;
-@property (strong) NSError           *error;
-@property (strong) NSHTTPURLResponse *response;
-
-@property (assign) BOOL              ignoresInvalidSSLCerts;
-
-@property (assign) UIBackgroundTaskIdentifier    networkTask;
-@property (assign) BOOL                          useBackground;
+@property (nonatomic, readonly) NSData *postData;
+@property (nonatomic, readonly) NSData *rawResponseData;
+@property (nonatomic, strong, readonly) NSError *error;
+@property (nonatomic, strong, readonly) NSHTTPURLResponse *response;
+@property (nonatomic, assign, readonly) UIBackgroundTaskIdentifier    networkTask;
 
 -(id)initWithURL:(NSURL*)url;
 
@@ -67,5 +53,12 @@
 -(void)startRequest;
 -(void)cancelRequest;
 -(void)clearDelegatesAndCancelRequest;
+
+-(void) setStartedBlock:(TMHTTPBasicBlock)startedBlock;
+-(void) setCompletedBlock:(TMHTTPSuccessBlock)completedBlock;
+-(void) setFailedBlock:(TMHTTPFailureBlock)failedBlock;
+-(void) setCancelledBlock:(TMHTTPBasicBlock)cancelledBlock;
+-(void) setDownloadProgressBlock:(TMHTTPProgressBlock)downloadProgressBlock;
+-(void) setUploadProgressBlock:(TMHTTPProgressBlock)uploadProgressBlock;
 
 @end
